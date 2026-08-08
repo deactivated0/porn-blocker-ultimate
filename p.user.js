@@ -1,13 +1,17 @@
 // ==UserScript==
 // @name         Porn Blocker | Ultimate
 // @namespace    https://github.com/deactivated0
-// @version      1.2
+// @version      2.0
 // @description  Strong adult-content blocker with safe-site allowlist, smart scoring, obfuscation detection, chatroom blocking, and redirect.
 // @author       https://github.com/deactivated0
 // @match        *://*/*
+// @match        http://*/*
+// @match        https://*/*
+// @include      *
 // @run-at       document-start
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        unsafeWindow
 // @updateURL    https://raw.githubusercontent.com/deactivated0/porn-blocker-ultimate/main/p.user.js
 // @downloadURL  https://raw.githubusercontent.com/deactivated0/porn-blocker-ultimate/main/p.user.js
 // ==/UserScript==
@@ -16,13 +20,34 @@
   'use strict';
 
   const REDIRECT_URL = 'https://duckduckgo.com/';
+
+  // Immediate Line-1 Synchronous Domain Interceptor (0ms delay)
+  try {
+    const rawHost = String(location.hostname || location.host || '').toLowerCase();
+    const INSTANT_ADULT_REGEX = /pornhub|xnxx|xvideo|xhamster|redtube|youporn|spankbang|myfreecams|rule34|youjizz|onlyfans|fansly|chaturbate|stripchat|bongacams|livejasmin|camsoda|cam4|missav|hentai|camwhore|camgirl|eporner|tnaflix|thumbzilla|javmost|hpjav|hqporner|javhd|supersex|brazzers|bangbros|naughtyamerica|realitykings|xanimu|hentaihaven|nhentai|asmhentai|hitomi|e-hentai|exhentai|pururin|hanime|gelbooru|danbooru|yandere|e621|beeg|tube8|txxx|heavy-r|motherless|tblop|javff|javsub|javlibrary|omegle|ometv|chatrandom|chatroulette|coomeet|shagle|dirtyroulette/i;
+
+    if (rawHost && INSTANT_ADULT_REGEX.test(rawHost) || /\.(xxx|porn|sex|adult)$/i.test(rawHost)) {
+      try { window.stop(); } catch {}
+      try {
+        if (document.documentElement) {
+          document.documentElement.innerHTML = '<head><title>Access Blocked</title></head><body style="background:#000;color:#ff3333;text-align:center;padding-top:20vh;font-family:sans-serif;"><h1>🛑 Access Blocked</h1><p>Redirecting...</p></body>';
+        }
+      } catch {}
+      try { window.top.location.replace(REDIRECT_URL); } catch {
+        try { window.location.replace(REDIRECT_URL); } catch {
+          window.location.href = REDIRECT_URL;
+        }
+      }
+    }
+  } catch {}
+
   const BLOCK_THRESHOLD = 4;
   const CONTENT_THRESHOLD = 8;
   const TITLE_THRESHOLD = 3;
   const PATH_THRESHOLD = 3;
   const EXPIRE_DAYS = 30;
   const BL_KEY = 'pornblocker-blacklist';
-  const BL_VER = '6';
+  const BL_VER = '7';
   const MAX_TEXT_LEN = 16000;
   const DANGEROUS_TLDS = new Set(['xxx', 'porn', 'sex', 'adult']);
 
