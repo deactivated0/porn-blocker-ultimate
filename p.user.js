@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Porn Blocker | Ultimate
 // @namespace    https://github.com/deactivated0
-// @version      1.0
+// @version      1.1
 // @description  Strong adult-content blocker with safe-site allowlist, smart scoring, obfuscation detection, chatroom blocking, and redirect.
 // @author       https://github.com/deactivated0
 // @match        *://*/*
@@ -16,13 +16,13 @@
   'use strict';
 
   const REDIRECT_URL = 'https://duckduckgo.com/';
-  const BLOCK_THRESHOLD = 6;
-  const CONTENT_THRESHOLD = 18;
-  const TITLE_THRESHOLD = 4;
-  const PATH_THRESHOLD = 4;
+  const BLOCK_THRESHOLD = 4;
+  const CONTENT_THRESHOLD = 8;
+  const TITLE_THRESHOLD = 3;
+  const PATH_THRESHOLD = 3;
   const EXPIRE_DAYS = 30;
   const BL_KEY = 'pornblocker-blacklist';
-  const BL_VER = '5';
+  const BL_VER = '6';
   const MAX_TEXT_LEN = 16000;
   const DANGEROUS_TLDS = new Set(['xxx', 'porn', 'sex', 'adult']);
 
@@ -118,7 +118,9 @@
     'blowjob': 8, 'handjob': 8, 'rimjob': 8, 'footjob': 8, 'deepthroat': 8,
     'bukkake': 8, 'gangbang': 8, 'orgy': 8, 'threesome': 7, 'cumshot': 8,
     'masturbat': 6, 'teenporn': 8, 'loli': 8, 'shota': 8, 'cuckold': 5,
-    'luoli': 6, 'paidaa': 6, 'haijiao': 6,
+    'luoli': 6, 'paidaa': 6, 'haijiao': 6, 'cock': 6, 'pussy': 6, 'vagina': 6,
+    'boobs': 6, 'tits': 6, 'fuck': 6, 'slut': 6, 'whore': 6, 'milf': 6,
+    'bbw': 5, 'kink': 5, 'anal': 6, 'oral': 5, 'dick': 6,
 
     // Chatrooms and random video chat platforms
     'omegle': 8, 'ometv': 8, 'umingle': 8, 'chatrandom': 8, 'chatroulette': 8,
@@ -144,9 +146,9 @@
     '\\bhentai\\b': 6,
     '\\bxxx\\b': 6,
     '\\badult(?:content|site|sites|video|videos|image|images|pics?|material)?\\b': 4,
-    '\\b(?:sex|s[e3]x|s3x|sexx)\\b': 3,
+    '\\b(?:sex|s[e3]x|s3x|sexx)\\b': 4,
     '\\b(?:sexy|erotic|erotica|lewd|lewdness)\\b': 3,
-    '\\b(?:fetish|fetishes|fetishism)\\b': 4,
+    '\\b(?:fetish|fetishes|fetishism|kink|kinky)\\b': 4,
     '\\b(?:bdsm|bondage|dominatrix|dominant|submissive)\\b': 4,
     '\\b(?:escort|escorts|brothel|brothels|prostitut(?:e|ion)\\w*)\\b': 6,
     '\\b(?:stripper|strippers|stripclub|stripclubs|stripping)\\b': 5,
@@ -155,18 +157,20 @@
     '\\b(?:blow\\s*job|hand\\s*job|rim\\s*job|foot\\s*job|deep\\s*throat|deepthroat)\\b': 6,
     '\\b(?:creampie|cumshot|cumshots|bukkake|gangbang|orgy|orgies|threesome|threesomes)\\b': 6,
     '\\b(?:anal|oral)\\s+sex\\b': 6,
-    '\\b(?:cuckold|milf|milfs|gilf|gilfs|camgirl|camgirls|camwhore|webcam)\\b': 4,
+    '\\b(?:cuckold|milf|milfs|gilf|gilfs|camgirl|camgirls|camwhore|webcam)\\b': 5,
     '\\b(?:onlyfans|fansly|manyvids|myfreecams)\\b': 6,
     '\\b(?:virgin|virgins)\\b': 2,
     '\\b(?:teen|teens)(?:porn)?\\b': 4,
     '\\b(?:loli|shota|lolicon|shotacon)\\b': 6,
     '\\b(?:shemale|tranny)\\b': 4,
-    '\\b(?:h[o0]rny|horny)\\b': 2,
-    '\\b(?:f[a@]p|fap(?:ping)?)\\b': 2,
-    '\\b(?:n[o0]ods?|n00ds?|noods?)\\b': 3,
+    '\\b(?:h[o0]rny|horny)\\b': 3,
+    '\\b(?:f[a@]p|fap(?:ping)?)\\b': 3,
+    '\\b(?:n[o0]ods?|n00ds?|noods?)\\b': 4,
     '\\b(?:s[e3]ggs|s3ggs|shex)\\b': 3,
     '\\b(?:prawn|thicc|bussy|sloot)\\b': 2,
-    '\\b(?:cum|cums|cumming|cummed)\\b': 2,
+    '\\b(?:cum|cums|cumming|cummed)\\b': 3,
+    '\\b(?:pussy|vagina|cock|dick|penis|boobs|tits|nipple|nipples|clitoris)\\b': 5,
+    '\\b(?:fuck|fucking|fucked|fucker|slut|sluts|whore|whores)\\b': 4,
 
     // Chatroom & Random Cam terms
     '\\b(?:random\\s*video\\s*chat|talk\\s*to\\s*strangers|stranger\\s*chat|cam\\s*chat|video\\s*roulette|online\\s*chatrooms?|adult\\s*chat|nsfw\\s*chat|cam\\s*to\\s*cam|dirty\\s*chat|cam\\s*2\\s*cam|cyber\\s*sex)\\b': 6,
@@ -327,12 +331,13 @@
     return out.join(' ').slice(0, MAX_TEXT_LEN);
   }
 
-  function getImageText() {
+  function getMediaAndLinkText() {
     const out = [];
-    const imgs = document.querySelectorAll('img[alt],img[title]');
-    for (let i = 0; i < imgs.length; i++) {
-      const t = `${imgs[i].alt || ''} ${imgs[i].title || ''}`.trim();
-      if (t) out.push(t);
+    const elements = document.querySelectorAll('img[alt],img[title],a[href],iframe[src],video[src],source[src]');
+    for (let i = 0; i < elements.length; i++) {
+      const el = elements[i];
+      const text = `${el.alt || ''} ${el.title || ''} ${el.href || ''} ${el.src || ''}`.trim();
+      if (text) out.push(text);
     }
     return out.join(' ').slice(0, MAX_TEXT_LEN);
   }
@@ -343,7 +348,7 @@
       url.pathname || '',
       url.search || '',
       getMetaText(),
-      getImageText(),
+      getMediaAndLinkText(),
       getVisibleText()
     ];
 
@@ -489,7 +494,7 @@
       return;
     }
 
-    const titleScore = scoreText(document.title || '', contentEntries) * 0.8;
+    const titleScore = scoreText(document.title || '', contentEntries);
     if (titleScore >= TITLE_THRESHOLD) {
       await handleBlock(host, 'title');
       return;
