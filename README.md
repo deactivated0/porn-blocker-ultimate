@@ -3,7 +3,7 @@
 > **The Most Advanced, Lightweight, & Intelligent Adult Content Blocker Userscript**
 > Automatically inspects, scores, and blocks NSFW / adult websites, hidden adult chatrooms, dangerous TLDs, and obfuscated text across the web in real-time.
 
-[![Install Userscript](https://img.shields.io/badge/🚀_Install_Script-Direct_Link-success?style=for-the-badge&logo=tampermonkey)](https://github.com/deactivated0/porn-blocker-ultimate/raw/main/p.user.js?v=3.0)
+[![Install Userscript](https://img.shields.io/badge/🚀_Install_Script-Direct_Link-success?style=for-the-badge&logo=tampermonkey)](https://github.com/deactivated0/porn-blocker-ultimate/raw/main/p.user.js?v=1.0)
 [![GitHub Stars](https://img.shields.io/github/stars/deactivated0/porn-blocker-ultimate?style=for-the-badge&color=gold)](https://github.com/deactivated0/porn-blocker-ultimate/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 [![Compatible with Tampermonkey](https://img.shields.io/badge/Tampermonkey-Compatible-darkgreen?style=for-the-badge&logo=tampermonkey)](https://www.tampermonkey.net/)
@@ -17,7 +17,7 @@
 Click the big green button below to install directly into your userscript manager (Tampermonkey, ScriptCat, Violentmonkey, or Greasemonkey):
 
 <p align="center">
-  <a href="https://github.com/deactivated0/porn-blocker-ultimate/raw/main/p.user.js?v=3.0">
+  <a href="https://github.com/deactivated0/porn-blocker-ultimate/raw/main/p.user.js?v=1.0">
     <img src="https://img.shields.io/badge/👉_CLICK_HERE_TO_INSTALL_PORN_BLOCKER_ULTIMATE-2ea44f?style=for-the-badge&logo=javascript&logoColor=white" alt="Install Porn Blocker Ultimate Userscript" width="600" />
   </a>
 </p>
