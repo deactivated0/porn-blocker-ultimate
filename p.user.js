@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Porn Blocker | Ultimate
 // @namespace    https://github.com/deactivated0
-// @version      2.0
+// @version      2.1
 // @description  Strong adult-content blocker with safe-site allowlist, smart scoring, obfuscation detection, chatroom blocking, and redirect.
 // @author       https://github.com/deactivated0
 // @match        *://*/*
@@ -20,26 +20,47 @@
   'use strict';
 
   const REDIRECT_URL = 'https://duckduckgo.com/';
+  const INSTANT_ADULT_REGEX = /pornhub|xnxx|xvideo|xhamster|redtube|youporn|spankbang|myfreecams|rule34|youjizz|onlyfans|fansly|chaturbate|stripchat|bongacams|livejasmin|camsoda|cam4|missav|hentai|camwhore|camgirl|eporner|tnaflix|thumbzilla|javmost|hpjav|hqporner|javhd|supersex|brazzers|bangbros|naughtyamerica|realitykings|xanimu|hentaihaven|nhentai|asmhentai|hitomi|e-hentai|exhentai|pururin|hanime|gelbooru|danbooru|yandere|e621|beeg|tube8|txxx|heavy-r|motherless|tblop|javff|javsub|javlibrary|omegle|ometv|chatrandom|chatroulette|coomeet|shagle|dirtyroulette/i;
 
-  // Immediate Line-1 Synchronous Domain Interceptor (0ms delay)
-  try {
-    const rawHost = String(location.hostname || location.host || '').toLowerCase();
-    const INSTANT_ADULT_REGEX = /pornhub|xnxx|xvideo|xhamster|redtube|youporn|spankbang|myfreecams|rule34|youjizz|onlyfans|fansly|chaturbate|stripchat|bongacams|livejasmin|camsoda|cam4|missav|hentai|camwhore|camgirl|eporner|tnaflix|thumbzilla|javmost|hpjav|hqporner|javhd|supersex|brazzers|bangbros|naughtyamerica|realitykings|xanimu|hentaihaven|nhentai|asmhentai|hitomi|e-hentai|exhentai|pururin|hanime|gelbooru|danbooru|yandere|e621|beeg|tube8|txxx|heavy-r|motherless|tblop|javff|javsub|javlibrary|omegle|ometv|chatrandom|chatroulette|coomeet|shagle|dirtyroulette/i;
+  let redirecting = false;
 
-    if (rawHost && INSTANT_ADULT_REGEX.test(rawHost) || /\.(xxx|porn|sex|adult)$/i.test(rawHost)) {
-      try { window.stop(); } catch {}
-      try {
-        if (document.documentElement) {
-          document.documentElement.innerHTML = '<head><title>Access Blocked</title></head><body style="background:#000;color:#ff3333;text-align:center;padding-top:20vh;font-family:sans-serif;"><h1>🛑 Access Blocked</h1><p>Redirecting...</p></body>';
-        }
-      } catch {}
-      try { window.top.location.replace(REDIRECT_URL); } catch {
-        try { window.location.replace(REDIRECT_URL); } catch {
-          window.location.href = REDIRECT_URL;
-        }
+  function go() {
+    if (redirecting) return;
+    redirecting = true;
+    try { window.stop(); } catch {}
+
+    try {
+      if (document.documentElement) {
+        document.documentElement.innerHTML = '<head><title>Access Blocked</title></head><body style="background:#000;color:#ff3333;text-align:center;padding-top:20vh;font-family:sans-serif;font-size:24px;"><h1>🛑 Access Blocked</h1><p>Redirecting to safe search...</p></body>';
       }
-    }
-  } catch {}
+    } catch {}
+
+    const target = REDIRECT_URL;
+    const realWin = (typeof unsafeWindow !== 'undefined' && unsafeWindow) ? unsafeWindow : window;
+
+    try { realWin.location.href = target; } catch {}
+    try { realWin.top.location.href = target; } catch {}
+    try { realWin.location.replace(target); } catch {}
+    try { window.top.location.href = target; } catch {}
+    try { window.location.href = target; } catch {}
+    try { document.location.href = target; } catch {}
+  }
+
+  function checkInstantBlock() {
+    try {
+      const realWin = (typeof unsafeWindow !== 'undefined' && unsafeWindow) ? unsafeWindow : window;
+      const targetUrl = String(realWin.location.href || location.href || document.URL || location.hostname || '').toLowerCase();
+
+      if (targetUrl && (INSTANT_ADULT_REGEX.test(targetUrl) || /\.(xxx|porn|sex|adult)(\/|$)/i.test(targetUrl))) {
+        go();
+        return true;
+      }
+    } catch {}
+    return false;
+  }
+
+  // Instant Line-1 Execution
+  checkInstantBlock();
 
   const BLOCK_THRESHOLD = 4;
   const CONTENT_THRESHOLD = 8;
@@ -47,7 +68,7 @@
   const PATH_THRESHOLD = 3;
   const EXPIRE_DAYS = 30;
   const BL_KEY = 'pornblocker-blacklist';
-  const BL_VER = '7';
+  const BL_VER = '8';
   const MAX_TEXT_LEN = 16000;
   const DANGEROUS_TLDS = new Set(['xxx', 'porn', 'sex', 'adult']);
 
