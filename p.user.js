@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Porn Blocker | Ultimate
 // @namespace    https://github.com/deactivated0
-// @version      2.1
+// @version      2.2
 // @description  Strong adult-content blocker with safe-site allowlist, smart scoring, obfuscation detection, chatroom blocking, and redirect.
 // @author       https://github.com/deactivated0
 // @match        *://*/*
@@ -11,6 +11,7 @@
 // @run-at       document-start
 // @grant        GM_setValue
 // @grant        GM_getValue
+// @grant        GM_openInTab
 // @grant        unsafeWindow
 // @updateURL    https://raw.githubusercontent.com/deactivated0/porn-blocker-ultimate/main/p.user.js
 // @downloadURL  https://raw.githubusercontent.com/deactivated0/porn-blocker-ultimate/main/p.user.js
@@ -27,6 +28,16 @@
   function go() {
     if (redirecting) return;
     redirecting = true;
+
+    try { window.onbeforeunload = null; } catch {}
+    try { window.onunload = null; } catch {}
+    try {
+      if (typeof unsafeWindow !== 'undefined' && unsafeWindow) {
+        unsafeWindow.onbeforeunload = null;
+        unsafeWindow.onunload = null;
+      }
+    } catch {}
+
     try { window.stop(); } catch {}
 
     try {
@@ -38,10 +49,10 @@
     const target = REDIRECT_URL;
     const realWin = (typeof unsafeWindow !== 'undefined' && unsafeWindow) ? unsafeWindow : window;
 
+    try { realWin.location.replace(target); } catch {}
     try { realWin.location.href = target; } catch {}
     try { realWin.top.location.href = target; } catch {}
-    try { realWin.location.replace(target); } catch {}
-    try { window.top.location.href = target; } catch {}
+    try { window.location.replace(target); } catch {}
     try { window.location.href = target; } catch {}
     try { document.location.href = target; } catch {}
   }
@@ -59,8 +70,13 @@
     return false;
   }
 
-  // Instant Line-1 Execution
+  // Line-1 Execution + Polling Fallback
   checkInstantBlock();
+
+  const pollTimer = setInterval(() => {
+    if (checkInstantBlock()) clearInterval(pollTimer);
+  }, 100);
+  setTimeout(() => clearInterval(pollTimer), 5000);
 
   const BLOCK_THRESHOLD = 4;
   const CONTENT_THRESHOLD = 8;
