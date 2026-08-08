@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Porn Blocker | Ultimate
 // @namespace    https://github.com/deactivated0
-// @version      1.1
+// @version      1.2
 // @description  Strong adult-content blocker with safe-site allowlist, smart scoring, obfuscation detection, chatroom blocking, and redirect.
 // @author       https://github.com/deactivated0
 // @match        *://*/*
@@ -449,10 +449,20 @@
     if (redirecting) return;
     redirecting = true;
     try { window.stop(); } catch {}
+
     try {
-      window.location.replace(REDIRECT_URL);
-    } catch {
-      window.location.href = REDIRECT_URL;
+      if (document.documentElement) {
+        document.documentElement.innerHTML = '<head><title>Blocked</title></head><body style="background:#000;color:#ff3333;text-align:center;padding-top:20vh;font-family:sans-serif;font-size:24px;"><h1>🛑 Access Blocked</h1><p>Redirecting to safe search...</p></body>';
+      }
+    } catch {}
+
+    const target = REDIRECT_URL;
+    try { window.top.location.replace(target); } catch {
+      try { window.location.replace(target); } catch {
+        try { window.top.location.href = target; } catch {
+          window.location.href = target;
+        }
+      }
     }
   }
 
@@ -471,7 +481,22 @@
     return scoreText(text, contentEntries);
   }
 
+  function syncCheckDomain() {
+    try {
+      const host = location.hostname.toLowerCase();
+      if (!host || isSafeHost(host)) return false;
+
+      if (isDangerousTld(host) || scoreDomain(host) >= BLOCK_THRESHOLD) {
+        go();
+        return true;
+      }
+    } catch {}
+    return false;
+  }
+
   async function scanNow() {
+    if (syncCheckDomain()) return;
+
     const url = new URL(location.href);
     const host = url.hostname.toLowerCase();
     if (!host) return;
@@ -608,9 +633,11 @@
     }, 20000);
   }
 
-  (async () => {
-    await scanNow();
-  })();
+  if (!syncCheckDomain()) {
+    (async () => {
+      await scanNow();
+    })();
+  }
 
   // Periodic blacklist cleanup
   (async () => {
