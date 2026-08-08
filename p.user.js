@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Porn Blocker | Ultimate
 // @namespace    https://github.com/deactivated0
-// @version      2.2
+// @version      3.0
 // @description  Strong adult-content blocker with safe-site allowlist, smart scoring, obfuscation detection, chatroom blocking, and redirect.
 // @author       https://github.com/deactivated0
 // @match        *://*/*
@@ -9,10 +9,7 @@
 // @match        https://*/*
 // @include      *
 // @run-at       document-start
-// @grant        GM_setValue
-// @grant        GM_getValue
-// @grant        GM_openInTab
-// @grant        unsafeWindow
+// @grant        none
 // @updateURL    https://raw.githubusercontent.com/deactivated0/porn-blocker-ultimate/main/p.user.js
 // @downloadURL  https://raw.githubusercontent.com/deactivated0/porn-blocker-ultimate/main/p.user.js
 // ==/UserScript==
@@ -31,36 +28,30 @@
 
     try { window.onbeforeunload = null; } catch {}
     try { window.onunload = null; } catch {}
-    try {
-      if (typeof unsafeWindow !== 'undefined' && unsafeWindow) {
-        unsafeWindow.onbeforeunload = null;
-        unsafeWindow.onunload = null;
-      }
-    } catch {}
-
     try { window.stop(); } catch {}
 
     try {
       if (document.documentElement) {
-        document.documentElement.innerHTML = '<head><title>Access Blocked</title></head><body style="background:#000;color:#ff3333;text-align:center;padding-top:20vh;font-family:sans-serif;font-size:24px;"><h1>🛑 Access Blocked</h1><p>Redirecting to safe search...</p></body>';
+        document.documentElement.innerHTML = '<head><title>Access Blocked</title></head><body style="background:#000;color:#ff3333;text-align:center;padding-top:20vh;font-family:sans-serif;font-size:24px;"><h1>🛑 Access Blocked</h1><p>Closing / Redirecting to safe search...</p></body>';
       }
     } catch {}
 
     const target = REDIRECT_URL;
-    const realWin = (typeof unsafeWindow !== 'undefined' && unsafeWindow) ? unsafeWindow : window;
 
-    try { realWin.location.replace(target); } catch {}
-    try { realWin.location.href = target; } catch {}
-    try { realWin.top.location.href = target; } catch {}
+    // Attempt tab closure first, then instant redirect
+    try { window.close(); } catch {}
+    try { self.close(); } catch {}
+    try { top.close(); } catch {}
+
     try { window.location.replace(target); } catch {}
+    try { window.top.location.replace(target); } catch {}
     try { window.location.href = target; } catch {}
     try { document.location.href = target; } catch {}
   }
 
   function checkInstantBlock() {
     try {
-      const realWin = (typeof unsafeWindow !== 'undefined' && unsafeWindow) ? unsafeWindow : window;
-      const targetUrl = String(realWin.location.href || location.href || document.URL || location.hostname || '').toLowerCase();
+      const targetUrl = String(window.location.href || location.href || document.URL || location.hostname || '').toLowerCase();
 
       if (targetUrl && (INSTANT_ADULT_REGEX.test(targetUrl) || /\.(xxx|porn|sex|adult)(\/|$)/i.test(targetUrl))) {
         go();
@@ -70,7 +61,7 @@
     return false;
   }
 
-  // Line-1 Execution + Polling Fallback
+  // Native Line-1 Synchronous Interceptor
   checkInstantBlock();
 
   const pollTimer = setInterval(() => {
